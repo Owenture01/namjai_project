@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Droplet, AlertCircle, TrendingUp, MapPin } from 'lucide-react';
 import { mockTanks, generateSensorReadings } from '../utils/mockData';
 import { SensorReading, WaterTank } from '../types';
+import location1 from '../resources/location1.png';
 
 export function Dashboard() {
   const [selectedTankId, setSelectedTankId] = useState(mockTanks[0].id);
@@ -142,9 +143,14 @@ export function Dashboard() {
             <MapPin size={20} className="mr-2" />
             Location Map
           </h3>
-          <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
+          <div className="relative w-full h-64 rounded-lg overflow-hidden">
+            <img 
+              src={location1} 
+              alt="Location map"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center space-y-2">
+              <div className="text-center space-y-2 bg-white/80 p-3 rounded-lg backdrop-blur-sm">
                 <MapPin size={48} className="text-blue-600 mx-auto" />
                 <div className="font-medium text-gray-900">{selectedTank.locationName}</div>
                 <div className="text-sm text-gray-600">
@@ -219,10 +225,55 @@ function TrendChart({ data, parameter, label, color }: { data: SensorReading[], 
     red: 'stroke-red-600',
   };
 
+  // Get benchmark values based on parameter
+  const getBenchmarkValue = () => {
+    const thresholds: Record<string, number> = {
+      ph: 8.5,          // Upper limit for pH
+      turbidity: 5,     // Upper limit for turbidity
+      tds: 500,         // Upper limit for TDS
+      temperature: 30,   // Upper limit for temperature
+    };
+    return thresholds[parameter] || max;
+  };
+
+  // Calculate benchmark line position
+  const benchmarkValue = getBenchmarkValue();
+  const benchmarkY = 100 - ((benchmarkValue - min) / range) * 80 - 10;
+
+  // Generate timestamp markers (every 2 hours)
+  const timeMarkers = [];
+  const hourGap = 2;
+  const totalHours = 24;
+  for (let i = 0; i <= totalHours; i += hourGap) {
+    const x = (i / totalHours) * 400;
+    timeMarkers.push(x);
+  }
+
   return (
     <div>
       <h4 className="text-sm font-medium text-gray-700 mb-2">{label}</h4>
       <svg viewBox="0 0 400 100" className="w-full h-24">
+        {/* Grid lines for time markers */}
+        {timeMarkers.map((x, i) => (
+          <line
+            key={`grid-${i}`}
+            x1={x}
+            y1={10}
+            x2={x}
+            y2={90}
+            className="stroke-gray-200 stroke-[0.5]"
+          />
+        ))}
+
+        {/* Benchmark line */}
+        <line
+          x1={0}
+          y1={benchmarkY}
+          x2={400}
+          y2={benchmarkY}
+          className="stroke-red-400 stroke-[1] stroke-dasharray-2"
+        />
+
         <polyline
           fill="none"
           className={`${colorMap[color]} stroke-2`}
@@ -248,6 +299,12 @@ function TrendChart({ data, parameter, label, color }: { data: SensorReading[], 
       </svg>
       <div className="flex justify-between text-xs text-gray-500 mt-1">
         <span>{data[0].timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        {timeMarkers.slice(1, -1).map((_, i) => (
+          <span key={`time-${i}`} className="text-gray-400">
+            {new Date(data[0].timestamp.getTime() + (i + 1) * hourGap * 60 * 60 * 1000)
+              .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        ))}
         <span>{data[data.length - 1].timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
       </div>
     </div>
