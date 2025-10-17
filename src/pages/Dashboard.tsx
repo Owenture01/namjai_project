@@ -184,10 +184,30 @@ export function Dashboard() {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">24-Hour Trends</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <TrendChart data={readings} parameter="ph" label="pH Level" color="blue" />
-          <TrendChart data={readings} parameter="turbidity" label="Turbidity (NTU)" color="orange" />
-          <TrendChart data={readings} parameter="tds" label="TDS (ppm)" color="green" />
-          <TrendChart data={readings} parameter="temperature" label="Temperature (°C)" color="red" />
+          <TrendChart data={readings} 
+                      parameter="ph" 
+                      label="pH Level" 
+                      color="blue" 
+                      yAxisBounds={{ lower: 6.0, upper: 9.0 }}
+                      setpoint={6.5} />
+          <TrendChart data={readings} 
+                      parameter="turbidity" 
+                      label="Turbidity (NTU)" 
+                      color="orange" 
+                      yAxisBounds={{ lower: 0, upper: 10 }}
+                      setpoint={5} />
+          <TrendChart data={readings} 
+                      parameter="tds" 
+                      label="TDS (ppm)" 
+                      color="green"
+                      yAxisBounds={{ lower: 0, upper: 1000 }}
+                      setpoint={500} />
+          <TrendChart data={readings} 
+                      parameter="temperature" 
+                      label="Temperature (°C)" 
+                      color="red" 
+                      yAxisBounds={{ lower: 5, upper: 35 }}
+                      setpoint={30} />
         </div>
       </div>
     </div>
@@ -212,7 +232,19 @@ function MetricCard({ title, value, unit, trend, status, icon: Icon }: any) {
   );
 }
 
-function TrendChart({ data, parameter, label, color }: { data: SensorReading[], parameter: keyof SensorReading, label: string, color: string }) {
+type TrendChartProps = {
+  data: SensorReading[];
+  parameter: keyof SensorReading;
+  label: string;
+  color: string;
+  yAxisBounds: {
+    lower: number;
+    upper: number;
+  };
+  setpoint: number;
+};
+
+function TrendChart({ data, parameter, label, color, yAxisBounds, setpoint }: TrendChartProps) {
   const values = data.map(r => r[parameter] as number);
   const max = Math.max(...values);
   const min = Math.min(...values);
@@ -240,6 +272,13 @@ function TrendChart({ data, parameter, label, color }: { data: SensorReading[], 
   const benchmarkValue = getBenchmarkValue();
   const benchmarkY = 100 - ((benchmarkValue - min) / range) * 80 - 10;
 
+  // Generate y-axis markers
+  const yAxisMarkers = [
+    yAxisBounds.upper,
+    (yAxisBounds.upper + yAxisBounds.lower) / 2,
+    yAxisBounds.lower
+  ];
+
   // Generate timestamp markers (every 2 hours)
   const timeMarkers = [];
   const hourGap = 2;
@@ -252,51 +291,61 @@ function TrendChart({ data, parameter, label, color }: { data: SensorReading[], 
   return (
     <div>
       <h4 className="text-sm font-medium text-gray-700 mb-2">{label}</h4>
-      <svg viewBox="0 0 400 100" className="w-full h-24">
-        {/* Grid lines for time markers */}
-        {timeMarkers.map((x, i) => (
-          <line
-            key={`grid-${i}`}
-            x1={x}
-            y1={10}
-            x2={x}
-            y2={90}
-            className="stroke-gray-200 stroke-[0.5]"
-          />
-        ))}
+      <div className="flex">
+        <div className="w-10 flex flex-col justify-between pr-2 text-xs text-gray-500">
+          {yAxisMarkers.map((value, i) => (
+            <span key={i}>{value}</span>
+          ))}
+        </div>
 
-        {/* Benchmark line */}
-        <line
-          x1={0}
-          y1={benchmarkY}
-          x2={400}
-          y2={benchmarkY}
-          className="stroke-red-400 stroke-[1] stroke-dasharray-2"
-        />
+        <div className="flex-1">
+          <svg viewBox="0 0 400 100" className="w-full h-24">
+            {/* Grid lines for time markers */}
+            {timeMarkers.map((x, i) => (
+              <line
+                key={`grid-${i}`}
+                x1={x}
+                y1={10}
+                x2={x}
+                y2={90}
+                className="stroke-gray-200 stroke-[0.5]"
+              />
+            ))}
 
-        <polyline
-          fill="none"
-          className={`${colorMap[color]} stroke-2`}
-          points={values.map((v, i) => {
-            const x = (i / (values.length - 1)) * 400;
-            const y = 100 - ((v - min) / range) * 80 - 10;
-            return `${x},${y}`;
-          }).join(' ')}
-        />
-        {values.map((v, i) => {
-          const x = (i / (values.length - 1)) * 400;
-          const y = 100 - ((v - min) / range) * 80 - 10;
-          return (
-            <circle
-              key={i}
-              cx={x}
-              cy={y}
-              r="2"
-              className={colorMap[color].replace('stroke', 'fill')}
+            {/* Benchmark line */}
+            <line
+              x1={0}
+              y1={benchmarkY}
+              x2={400}
+              y2={benchmarkY}
+              className="stroke-red-400 stroke-[1] stroke-dasharray-2"
             />
-          );
-        })}
-      </svg>
+
+            <polyline
+              fill="none"
+              className={`${colorMap[color]} stroke-2`}
+              points={values.map((v, i) => {
+                const x = (i / (values.length - 1)) * 400;
+                const y = 100 - ((v - min) / range) * 80 - 10;
+                return `${x},${y}`;
+              }).join(' ')}
+            />
+            {values.map((v, i) => {
+              const x = (i / (values.length - 1)) * 400;
+              const y = 100 - ((v - min) / range) * 80 - 10;
+              return (
+                <circle
+                  key={i}
+                  cx={x}
+                  cy={y}
+                  r="2"
+                  className={colorMap[color].replace('stroke', 'fill')}
+                />
+              );
+            })}
+          </svg>
+        </div>
+      </div>
       <div className="flex justify-between text-xs text-gray-500 mt-1">
         <span>{data[0].timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
         {timeMarkers.slice(1, -1).map((_, i) => (
