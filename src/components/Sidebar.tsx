@@ -1,5 +1,6 @@
 import { LayoutDashboard, AlertTriangle, FileText, Wrench, Settings, Menu, X, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import namjaiLogo from '../resources/namjai.png';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -44,9 +45,9 @@ export function Sidebar({ isOpen, onClose, currentPage, onNavigate }: SidebarPro
           <div className="flex items-center justify-between p-4 border-b border-slate-700">
             <div className="flex items-center space-x-2">
                 <img
-                  src="/Users/owensengdalavong/namjai_project/src/resources/namjai.png"
-                  // alt="Namjai Logo"
-                  // className="w-8 h-8 rounded-lg object-cover"
+                  src={namjaiLogo}
+                  alt="Namjai Logo"
+                  className="w-8 h-8 rounded-lg object-cover"
                 />
               <span className="font-semibold text-lg">Namjai</span>
             </div>
