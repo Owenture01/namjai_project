@@ -72,7 +72,7 @@ export interface MaintenanceLog {
   id: string;
   tankId: string;
   tankName: string;
-  maintenanceType: 'sensor_calibration' | 'sensor_replacement' | 'tank_cleaning' | 'filter_replacement' | 'repair' | 'inspection';
+  maintenanceType: 'sensor_calibration' | 'sensor_replacement' | 'tank_cleaning' | 'filter_replacement' | 'repair' | 'inspection' | 'other';
   description: string;
   performedBy: string;
   performedByName: string;

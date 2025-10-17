@@ -1,4 +1,4 @@
-import { LayoutDashboard, AlertTriangle, FileText, Wrench, Settings, Menu, X, LogOut } from 'lucide-react';
+import { LayoutDashboard, AlertTriangle, FileText, Wrench, Settings, Menu, X, LogOut, Languages, HelpCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import namjaiLogo from '../resources/namjai.png';
 
@@ -18,6 +18,8 @@ export function Sidebar({ isOpen, onClose, currentPage, onNavigate }: SidebarPro
     { id: 'reports', label: 'Reports', icon: FileText },
     { id: 'maintenance', label: 'Maintenance', icon: Wrench },
     { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'language', label: 'Language', icon: Languages },
+    { id: 'guide', label: 'User Guide', icon: HelpCircle },
   ];
 
   const handleNavigate = (page: string) => {
